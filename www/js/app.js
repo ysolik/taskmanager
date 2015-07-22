@@ -18,10 +18,83 @@ angular.module('taskmanager', ['ionic'])
   });
 })
 
-.controller('TaskCtrl', function($scope){
-    $scope.tasks = [
-        {title: 'Task 1'},
-        {title: 'Task 2'},
-        {title: 'Task 3'}
-    ];
+.factory('Categories', function(){
+   return{
+       all: function(){
+            var categoryString = window.localStorage['categories'];
+            if(categoryString){
+                return angular.fromJson(categoryString);
+            }
+           return [];
+       },
+       save: function(categories){
+           window.localStorage['categories'] = angular.toJson(categories);
+       },
+       newCategory: function(categoryTitle){
+           return {
+               title: categoryTitle,
+               tasks: []
+           };
+       },
+       getLastActiveIndex: function(){
+           return parseInt(window.localStorage['lastActiveCategory']) || 0;
+       },
+       setLastActiveIndex: function(index){
+           window.localStorage['lastActiveCategory'] = index;
+       }
+   } 
+});
+
+.controller('TaskCtrl', function($scope, $ionicModal, Categories, $ionicSideMenuDelegate){
+    var createCategory = function(categoryTitle){
+        var newCategory = Categories.newCategory(categoryTitle);
+        $scope.categories.push(newCategory);
+        Categories.save($scope.categories);
+        $scope.selectCategory(newCategory, $scope.categories.length-1);
+    }
+    
+    $scope.categories = Categories.all();
+    
+    $scope.activeCategory = $scope.categories[Categories.getLastActiveIndex()];
+    
+    $scope.newCategory = function(){
+        var categoryTitle = prompt('Category name');
+        if(categoryTitle){
+            createCategory(categoryTitle);
+        }
+    }
+    
+    $scope.selectCategory = function(category, index){
+        $scope.activeCategory = category;
+        Categories.setLastActiveIndex(index);
+        $ionicSideMenuDelegate.toggleLeft(false);
+    }
+    
+    //Load Modal
+    $ionicModal.fromTemplateUrl('new-task.html', function(modal){
+       $scope.taskModal = modal; 
+    }, {
+        scope: $scope,
+        animation: 'slide-in-up'
+    });
+    
+    $scope.createTask = function(task){
+        $scope.tasks.push({
+            title: task.title
+        });
+        $scope.taskModal.hide();
+        task.title="";
+    }
+    
+    $scope.newTask = function(){
+        $scope.taskModal.show();
+    }
+    
+    $scope.closeNewTask = function(){
+        $scope.taskModal.hide();
+    }
+    
+    $scope.toggleCategories = function(){
+        $ionicSideMenuDelegate.toggleLeft();
+    }
 });
