@@ -43,7 +43,7 @@ angular.module('taskmanager', ['ionic'])
            window.localStorage['lastActiveCategory'] = index;
        }
    } 
-});
+})
 
 .controller('TaskCtrl', function($scope, $ionicModal, Categories, $ionicSideMenuDelegate){
     var createCategory = function(categoryTitle){
